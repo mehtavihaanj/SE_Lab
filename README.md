@@ -22,7 +22,6 @@ It is not reccommended to use this when running the emulator on longer programs.
 
 By default, the emulator will create a HLT instruction when the start function returns, and shut down.
 It will also stop if a cycle limit is reached, which is 500 by default.
-The low limit is in place for students who run into infinite loops and such while completing the project.
 You can change this by adding the `-l <cycle limit>` flag to the command you use to run the emulator.
 
 Also, the cache is unused by default, and memory accesses are treated as if everything is cache-resident.
@@ -47,12 +46,11 @@ There are four main directories at the top level of the repository:
 `src`, which contains the source code, and `testcases`, which contains the binary files that the emulator can run.
 The `checkpoints` directory is empty and is used by the testing suite for creating checkpoints of programs the emulator is run on.
 
-The `bin` directory contains `csim-ref` and a few versions of `se-ref` by default,
-which are provided references for students to compare against.
+The `bin` directory contains `csim-ref` and a few versions of `se-ref` by default.
 They use the same code as what is provided in this repository.
 When compiling with `make`, the files `se`, `csim`, `test-se`, and `test-csim` are created.
 `se` is the emulator described above, and `csim` is a standalone emulator for testing the cache separately.
-`test-se` and `test-csim` are useful for students to test their code against the provided testing suite.
+
 
 The `include` directory contains corresponding header files for each source code file.
 Most of these files just have function signatures,
@@ -60,7 +58,7 @@ but some also contain struct declarations used throughout the program.
 Files not mentioned here only contain function declarations that will be explained later.
 
 In the `base` subdirectory:
-- `archsim.h` contains declarations for most of the global variables used in the program that are not used by the student.
+- `archsim.h` contains declarations for most of the global variables used in the program.
 - `machine.h` contains the declaration for the machine_t struct,
   which acts as a container for all the different components of the emulator.
 - `mem.h` contains the declaration for the mem_t struct and other enums,
@@ -82,12 +80,12 @@ In the `pipe` subdirectory:
 
 The `src` directory contains the source code for the project.
 There are several subdirectories for better organization.
-The `cache` and `pipe` subdirectories are for students to complete,
+The `cache` and `pipe` subdirectories are the core functionality,
 though this repository contains the solution code for them.
-The `base` subdirectory contains the remaining emulator code,
-which is provided for students to use at the start.
+The `base` subdirectory contains the remaining emulator code.
+
 Finally, the `testbench` subdirectory contains code for automatically testing
-a student's solution and comparing against the provided reference.
+a solution and comparing to the reference.
 
 In the `base` subdirectory:
 - `archsim.c` contains the main function for running the emulator.
@@ -104,7 +102,7 @@ In the `base` subdirectory:
 - `proc.c` contains the code that runs an emulated program to completion.
   It runs each stage of the pipeline every cycle,
   and handles transferring data from a pipeline register's input to its output.
-  Students are meant to use the "output" side of a pipeline register to complete the stage's functionality,
+  The "output" side of a pipeline register is used to complete the stage's functionality,
   and write to the next stage's "input" side.
 - `ptable.c` contains the code that manages the pagetable for the emulated program's memory.
 
@@ -112,22 +110,19 @@ In the `cache` subdirectory:
 - `cache.c` contains the code for checking if a memory access is a cache hit or miss,
   as well as reading and writing to the cache itself.
 - `csim.c` contains a separate main function for testing the cache on its own.
-  This is for students to be able to test their cache implementation without having the rest of the lab working.
+  
 
 In the `pipe` subdirectory:
 - `forward.c` contains the code for forwarding data from execute, memory, and writeback
   back to decode for handling data hazards.
 - `hazard_control.c` contains the code for detecting control hazards and bubbling or stalling the pipeline.
-- `instr_base.c` contains a couple utilities provided to students.
+- `instr_base.c` contains a couple utilities for the emulator
   There are functions for extracting bitfields from an instruction,
   as well as code that creates a table (called `itable` in the code)
   that maps bits of an instruction to the corresponding opcode.
   It also contains code for the verbose output that prints the values and control signals at each cycle.
 - The remaining `instr_<stage>.c` files contain code for completing their corresponding pipeline stage.
 
-In the `testbench` subdirectory:
-- `test-csim.c` contains a test harness for comparing a student's csim solution with the provided `csim-ref`.
-- `test-se.c` contains a test harness for comparing a student's se solution with the provided `se-ref`.
 
 Finally, the `testcases` directory contains ARM binaries for the emulator to run.
 Each test has three files associated with it: the handwritten assembly (.s file),
