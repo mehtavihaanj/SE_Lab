@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Output CSV file
+OUTPUT_FILE="results.csv"
+
+# Header
+echo "A,B,testcase,cycles" > "$OUTPUT_FILE"
+
+# Associativity values to test
+A_vals=(1 2 4)   # <-- change these if you want
+B_vals=(8 16 32 64 128 256 512 1024 2048 4096)
+
+# Fixed C and D
+C_val=512
+D_val=100
+
+# Testcases
+testcases=("gemm_block" "gemm_ijk" "gemm_ikj")
+
+# Loop through all combinations
+for testcase in "${testcases[@]}"; do
+    for A in "${A_vals[@]}"; do
+        for B in "${B_vals[@]}"; do
+
+            # Generate output file name
+            output_file="output_${testcase}_A${A}_B${B}.txt"
+
+            # Run the command
+            bin/se -i "testcases/ec_writeup/${testcase}" -c "$output_file" -l 200000000 -A "$A" -B "$B" -C "$C_val" -d "$D_val"
+
+            # Extract the cycles from the first line of the output file
+            if [[ -f "$output_file" ]]; then
+                line=$(head -n 1 "$output_file")
+                # extract the number
+                if [[ $line =~ ([0-9]+)\ cycles ]]; then
+                    cycles="${BASH_REMATCH[1]}"
+                else
+                    cycles="ERROR"
+                fi
+            else
+                cycles="ERROR"
+            fi
+
+            # Append to CSV
+            echo "$A,$B,$testcase,$cycles" >> "$OUTPUT_FILE"
+            echo "Logged: A=$A, B=$B, testcase=$testcase, cycles=$cycles"
+
+        done
+    done
+done
+
+echo "Finished all tests. Results saved in $OUTPUT_FILE"

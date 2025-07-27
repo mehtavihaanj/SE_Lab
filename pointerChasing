@@ -1,0 +1,46 @@
+ #!/bin/bash
+
+A=1
+# have to be at least 8 and is a power of 2
+B=512
+#Must be a multiple of A ∗ B and a power of 2
+C=512
+d=10
+l=1000000000
+   
+   # Create output directories
+mkdir -p checkpoints
+
+# Start summary file
+echo "Testcase,Type,Cycles,Hits,Misses" > summary.csv
+
+# Loop over n = 6 to 18
+for n in {6..18}
+do
+    for type in fast slow
+    do
+        testcase="testcases/pc/$type/pc-$n"
+        checkpoint="checkpoints/pc-${type}-${n}.out"
+
+        echo "Running $testcase..."
+
+        # Run the simulation
+        bin/se-ref-wk4 -i "$testcase" -A $A -B $B -C $C -d $d -l $l -c "$checkpoint"
+
+        # Extract cycle count from line like:
+        # Machine state checkpoint after 40000000 cycles:
+        cycles=$(grep "Machine state checkpoint after" "$checkpoint" | grep -o '[0-9]\+')
+
+        # Extract hits and misses from line:
+        hit_miss_line=$(grep "Number of cache hits, misses" "$checkpoint")
+       
+        # Use regex to extract just the numbers
+        hits=$(echo "$hit_miss_line" | grep -oP '\d+(?=,)' )  # Extract number before comma
+        misses=$(echo "$hit_miss_line" | grep -oP '\d+$' )   # Extract number after comma
+
+        # Write summary line
+        echo "pc-$n,$type,$cycles,$hits,$misses" >> summary.csv
+    done
+done
+
+echo "✅ All testcases completed. Summary written to summary.csv"

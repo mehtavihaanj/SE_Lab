@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# Output CSV file
+OUTPUT_FILE="ratio_results.csv"
+
+# Write CSV header
+echo "A,B,testcase_num,slow_cycles,fast_cycles,ratio" > "$OUTPUT_FILE"
+
+# Define values for A and B you want to test
+A_vals=(1)          # Example: modify as needed
+B_vals=(512)    # Example: modify as needed
+
+# Define testcase range
+testcase_start=6
+testcase_end=18
+
+# Fixed cache parameters
+C_val=512
+D_val=10
+
+# Loop over A, B, and testcase numbers
+for A in "${A_vals[@]}"; do
+    for B in "${B_vals[@]}"; do
+        for num in $(seq $testcase_start $testcase_end); do
+
+            echo "Running A=$A, B=$B, testcase=$num..."
+
+            # Filenames for output
+            slow_output="slow_A${A}_B${B}_pc${num}.txt"
+            fast_output="fast_A${A}_B${B}_pc${num}.txt"
+
+            # Paths
+            slow_path="testcases/pc/slow/pc-${num}"
+            fast_path="testcases/pc/fast/pc-${num}"
+
+            # Run slow testcase
+            bin/se-ref-wk4 -i "$slow_path" -c "$slow_output" -l 100000000 -A "$A" -B "$B" -C "$C_val" -d "$D_val"
+
+            # Run fast testcase
+            bin/se-ref-wk4 -i "$fast_path" -c "$fast_output" -l 100000000 -A "$A" -B "$B" -C "$C_val" -d "$D_val"
+
+            # Extract cycle counts (first line like: "Machine state checkpoint after X cycles:")
+            slow_cycles=$(head -n 1 "$slow_output" | grep -oP '\d+')
+            fast_cycles=$(head -n 1 "$fast_output" | grep -oP '\d+')
+
+            # Calculate ratio using bc for floating point division
+            if [[ -n "$slow_cycles" && -n "$fast_cycles" && "$fast_cycles" -ne 0 ]]; then
+                ratio=$(echo "scale=6; $slow_cycles / $fast_cycles" | bc)
+            else
+                ratio="ERROR"
+            fi
+
+            # Write to CSV
+            echo "$A,$B,$num,$slow_cycles,$fast_cycles,$ratio" >> "$OUTPUT_FILE"
+
+        done
+    done
+done
+
+echo "Finished! Results are in $OUTPUT_FILE"
